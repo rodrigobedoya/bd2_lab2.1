@@ -101,8 +101,8 @@ public:
     /*
     * function to display records of file
     */
-    void scanAll() {
-	records.clear();
+    void scanAll(bool print = true) {
+    records.clear();
         ifstream inFile;
         inFile.open(fileName, ios::binary);
         //read the first pointer
@@ -111,11 +111,12 @@ public:
         //read the records
         Record obj;
         while (inFile.read((char *) &obj, sizeof(obj))) {
-	    if (obj.getNextDel() == -2)
-	       {
-                obj.showData();
+        if (obj.getNextDel() == -2)
+           {
+                if(print)
+                    obj.showData();
                 records.push_back(obj);
-	       }
+           }
         }
         inFile.close();
     }
@@ -214,17 +215,38 @@ public:
         return numRecords;
     }
 
-	void bubblesort(vector<Record>& registers)
+    void bulkInsert(vector<Record> registers)
+    {
+        scanAll(false);
+        for(int i = 0; i < registers.size();i++)
+        {
+            records.push_back(registers[i]);
+        }
+        ofstream file;
+        file.open(fileName, ofstream::out | ofstream::trunc);
+        file.close();
+
+        initFreeList();
+
+        bubblesort(records);
+        for(int i = 0; i < records.size();i++)
+        {
+            writeRecord(records[i]);
+        }
+        return;
+    }
+
+    void bubblesort(vector<Record>& registers)
         {
             for(int i = 0; i < registers.size()-1;i++)
             {
                 for(int j = 0; j < registers.size()-i-1; j++)
                 {
-                    if(compare(registers[i],registers[i+1]))
+                    if(compare(registers[j],registers[j+1]))
                     {
-                        Record temp = registers[i];
-                        registers[i] = registers[i+1];
-                        registers[i+1] = temp;                              
+                        Record temp = registers[j];
+                        registers[j] = registers[j+1];
+                        registers[j+1] = temp;                              
                     }
                 }
             }
@@ -232,42 +254,39 @@ public:
 
     bool compare(Record alm1, Record alm2)
     {
-        string name1(alm1.nombre),name2(alm2.nombre);		
+        string name1(alm1.nombre),name2(alm2.nombre);       
         transform(name1.begin(), name1.end(), name1.begin(),::tolower);
         transform(name2.begin(), name2.end(), name2.begin(),::tolower);
         if(name1 > name2)
             return true;
         else
             return false;
-	}
+    }
 
     
 };
 
 int main()
 {
-	Record alu1("Rodrigo","CS",8);
-	Record alu2("Bryan","CS",9);
+    Record alu1("Rodrigo2","CS",8);
+    Record alu2("Bryan","CS",9);
     Record alu3("ElBryan","CS",10);
+    Record alu4("Alumno","CS",8);
+    Record alu5("Student","CS",9);
+    Record alu6("Rodrigo","CS",10);
 
     vector<Record> alumnos;
     alumnos.push_back(alu1);
     alumnos.push_back(alu2);
     alumnos.push_back(alu3);
+    alumnos.push_back(alu4);
+    alumnos.push_back(alu5);
+    alumnos.push_back(alu6);
     
-	FixedRecordFile file("datos1.dat");
+    FixedRecordFile file("datos1.dat");
 
-    for(int i = 0; i < alumnos.size();i++)
-    {
-        cout << alumnos[i].nombre<<endl;
-    }
-    cout << endl;
-    file.bubblesort(alumnos);
-    for(int i = 0; i < alumnos.size();i++)
-    {
-        cout << alumnos[i].nombre<<endl;
-    }
-    cout << endl;
-	return 0;
+    file.bulkInsert(alumnos);
+    file.scanAll();
+    return 0;
 }
 
